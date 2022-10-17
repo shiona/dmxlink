@@ -31,10 +31,11 @@ bool send_data(uint8_t target, uint8_t subchannel,
   // nRF24 radio address
   uint64_t addr = RADIO_DATA_PIPE_MASK | target;
 
-  uint8_t data[] = {subchannel,
-                    (r * intensity) / 255,
-                    (g * intensity) / 255,
-                    (b * intensity) / 255};
+  uint8_t data[] = {intensity,
+  r,b,g};
+                    //(r * intensity) / 255,
+                    //(g * intensity) / 255,
+                    //(b * intensity) / 255};
 
   radio.stopListening();
 
