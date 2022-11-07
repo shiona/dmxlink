@@ -58,7 +58,7 @@ void setup() {
   //radio.startListening();
 
   DMXSerial.init(DMXReceiver);
-  DMXSerial.maxChannel(wireless_receiver_count * CHANNELS_PER_RECEIVER);
+  //DMXSerial.maxChannel(wireless_receiver_count * CHANNELS_PER_RECEIVER);
 
   dmx_buffer = DMXSerial.getBuffer();
 
@@ -79,6 +79,8 @@ void setup() {
   for (int i = 1; i <= 9; ++i) {
     dmx_offset |= (digitalRead(i) == LOW) << (i - 1);
   }
+
+  DMXSerial.maxChannel(dmx_offset + wireless_receiver_count * CHANNELS_PER_RECEIVER);
 }
 
 void loop() {
