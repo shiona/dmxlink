@@ -85,12 +85,12 @@ void loop() {
           uint8_t g2 = (g * intensity) >> 8;
           uint8_t b2 = (b * intensity) >> 8;
           //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
-          leds[i] = CRGB(r2, g2, b2);
+          leds[NUM_LEDS - i - 1] = CRGB(r2, g2, b2);
           //leds[i] = CRGB(200, g2, b2);
         }
         else
         {
-          leds[i] = CRGB(0, 0, 0);
+          leds[NUM_LEDS - i - 1] = CRGB(0, 0, 0);
         }
       }
 
