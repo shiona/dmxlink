@@ -27,7 +27,7 @@ const uint8_t B_PIN[] = {3};
 const uint8_t strip_count = 1;
 
 #define RGB_DATA_PIN 5
-#define NUM_LEDS 297
+#define NUM_LEDS 70
 CRGB leds[NUM_LEDS];
 
 void set_led(uint8_t led_pin, uint8_t brightness) {
@@ -59,7 +59,7 @@ static const CRGB LED_BLUE = CRGB(0, 0, 255);
 
 void loop() {
  // timing stuff
- #define speed 4
+ #define speed 1
   static uint8_t t = 0;
   static uint8_t u = 0;
   if (radio.available()) {
@@ -90,16 +90,32 @@ void loop() {
       // and the actual loading bars
       else if (state <= 192)
       {
+        static uint8_t lightning_front_led = 0;
         for (uint16_t i = 0; i < NUM_LEDS; i++)
         {
-          uint8_t intensity = sine_wave_pow_2[(u - 137*i)%256];
-          uint8_t r2 = (r * intensity) >> 8;
-          uint8_t g2 = (g * intensity) >> 8;
-          uint8_t b2 = (b * intensity) >> 8;
+          uint8_t lightning_diff = i - lightning_front_led;
+
+          // Base sparkle
+          uint8_t intensity = sine_wave_pow_2[(u - 157*i*i)%256] >> 4;
+
+          // Lightning front intensity
+          uint8_t intensity2 = 0;
+          if (lightning_diff == 0) intensity2 = 255;
+          else if (lightning_diff < 3) intensity2 = 64;
+
+          intensity2 = max(intensity, intensity2);
+
+          uint8_t r2 = (r * intensity2) >> 8;
+          uint8_t g2 = (g * intensity2) >> 8;
+          uint8_t b2 = (b * intensity2) >> 8;
+          //r2 = (r2 * intensity >> 8
+          //g2 = (g2 * intensity >> 8
+          //b2 = (b2 * intensity >> 8
           //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
-          leds[NUM_LEDS - i - 1] = CRGB(r2, g2, b2);
           leds[i] = CRGB(r2, g2, b2);
         }
+        lightning_front_led++;
+        lightning_front_led %= NUM_LEDS;
       }
       else // 192 < state < 256
       {
