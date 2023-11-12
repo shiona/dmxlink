@@ -54,6 +54,7 @@ void setup() {
 
 static const CRGB LED_OFF = CRGB(0, 0, 0);
 static const CRGB LED_RED = CRGB(255, 0, 0);
+static const CRGB LED_GREEN = CRGB(0, 255, 0);
 static const CRGB LED_BLUE = CRGB(0, 0, 255);
 
 void loop() {
@@ -78,7 +79,7 @@ void loop() {
 
       //uint16_t lit_led_count = ((NUM_LEDS) * (uint32_t)(lit)) / 255;
 
-      if (state == 0)
+      if (state < 64)
       {
         for (uint16_t i = 0; i < NUM_LEDS; i++)
         {
@@ -87,42 +88,24 @@ void loop() {
       }
       // This case handles both "stand by" with loading state 0 (state 1-10)
       // and the actual loading bars
-      else if (state <= 210)
-      {
-        // Loading bar led count
-        uint16_t lit_led_count = 0;
-        if (state > 10)
-        {
-          // lit per side
-          lit_led_count = state - 10;
-        }
-
-        for (uint16_t i = 0; i < NUM_LEDS/2; i++)
-        {
-          uint8_t intensity = sine_wave_pow_2[(u - 137*i)%256];
-          //intensity = 10 + intensity >> 1;
-          if (i < lit_led_count)
-          {
-            leds[NUM_LEDS - i - 1] = LED_RED;
-            leds[i] = LED_RED;
-          }
-          else
-          {
-            uint8_t r2 = (r * intensity) >> 8;
-            uint8_t g2 = (g * intensity) >> 8;
-            uint8_t b2 = (b * intensity) >> 8;
-            //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
-            leds[NUM_LEDS - i - 1] = CRGB(r2, g2, b2);
-            leds[i] = CRGB(r2, g2, b2);
-            //leds[i] = CRGB(200, g2, b2);
-          }
-        }
-      }
-      else
+      else if (state <= 192)
       {
         for (uint16_t i = 0; i < NUM_LEDS; i++)
         {
-          leds[i] = LED_BLUE;
+          uint8_t intensity = sine_wave_pow_2[(u - 137*i)%256];
+          uint8_t r2 = (r * intensity) >> 8;
+          uint8_t g2 = (g * intensity) >> 8;
+          uint8_t b2 = (b * intensity) >> 8;
+          //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
+          leds[NUM_LEDS - i - 1] = CRGB(r2, g2, b2);
+          leds[i] = CRGB(r2, g2, b2);
+        }
+      }
+      else // 192 < state < 256
+      {
+        for (uint16_t i = 0; i < NUM_LEDS; i++)
+        {
+          leds[i] = LED_GREEN;
         }
       }
 
