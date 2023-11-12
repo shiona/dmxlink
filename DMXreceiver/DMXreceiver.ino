@@ -27,7 +27,7 @@ const uint8_t B_PIN[] = {3};
 const uint8_t strip_count = 1;
 
 #define RGB_DATA_PIN 5
-#define NUM_LEDS 70
+#define NUM_LEDS 140
 CRGB leds[NUM_LEDS];
 
 void set_led(uint8_t led_pin, uint8_t brightness) {
@@ -59,80 +59,78 @@ static const CRGB LED_BLUE = CRGB(0, 0, 255);
 
 void loop() {
  // timing stuff
- #define speed 1
+ #define speed 4
   static uint8_t t = 0;
   static uint8_t u = 0;
+  uint8_t data[4];
+
+  static uint8_t state, r, g, b;
+  static uint8_t lightning_front_led = 0;
+
   if (radio.available()) {
-    uint8_t data[4];
-    bool done = false;
+    radio.read(&data, sizeof(data));
 
-    while (!done) {
-      // transmitter sends its data as
-      // (target, r, g, b), each value is uint8
+    state = data[0];
+    r = data[1];
+    g = data[2];
+    b = data[3];
+  }
 
-      done = radio.read(&data, sizeof(data));
+  //uint16_t lit_led_count = ((NUM_LEDS) * (uint32_t)(lit)) / 255;
 
-      uint8_t state = data[0];
-      uint8_t r = data[1];
-      uint8_t g = data[2];
-      uint8_t b = data[3];
-
-      //uint16_t lit_led_count = ((NUM_LEDS) * (uint32_t)(lit)) / 255;
-
-      if (state < 64)
-      {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-          leds[i] = LED_OFF;
-        }
-      }
-      // This case handles both "stand by" with loading state 0 (state 1-10)
-      // and the actual loading bars
-      else if (state <= 192)
-      {
-        static uint8_t lightning_front_led = 0;
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-          uint8_t lightning_diff = i - lightning_front_led;
-
-          // Base sparkle
-          uint8_t intensity = sine_wave_pow_2[(u - 157*i*i)%256] >> 4;
-
-          // Lightning front intensity
-          uint8_t intensity2 = 0;
-          if (lightning_diff == 0) intensity2 = 255;
-          else if (lightning_diff < 3) intensity2 = 64;
-
-          intensity2 = max(intensity, intensity2);
-
-          uint8_t r2 = (r * intensity2) >> 8;
-          uint8_t g2 = (g * intensity2) >> 8;
-          uint8_t b2 = (b * intensity2) >> 8;
-          //r2 = (r2 * intensity >> 8
-          //g2 = (g2 * intensity >> 8
-          //b2 = (b2 * intensity >> 8
-          //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
-          leds[i] = CRGB(r2, g2, b2);
-        }
-        lightning_front_led++;
-        lightning_front_led %= NUM_LEDS;
-      }
-      else // 192 < state < 256
-      {
-        for (uint16_t i = 0; i < NUM_LEDS; i++)
-        {
-          leds[i] = LED_GREEN;
-        }
-      }
-
-      FastLED.show();
+  if (state < 64)
+  {
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
+      leds[i] = LED_OFF;
     }
   }
-  else {
-    delay(1);
+
+  // 64 - 128 will be fade the effect to max
+  else if (state < 192)
+  {
+    // Some intensity control for the desk
+    uint8_t desk_intensity = min((state - 64) * 4, 255); // 64 maps to 0, 65 to 4, 127 to 252, 128-192 to 255
+
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
+      uint8_t lightning_diff = i - lightning_front_led;
+
+      // Base sparkle
+      uint8_t intensity = sine_wave_pow_2[(u - 157*i*i)%256] >> 4;
+
+      // Lightning front intensity
+      uint8_t intensity2 = 0;
+      if (lightning_diff == 0) intensity2 = 255;
+      else if (lightning_diff < 3) intensity2 = 64;
+
+      intensity = max(intensity, intensity2);
+
+      intensity = (intensity * desk_intensity) >> 8;
+
+      uint8_t r2 = (r * intensity) >> 8;
+      uint8_t g2 = (g * intensity) >> 8;
+      uint8_t b2 = (b * intensity) >> 8;
+      //r2 = (r2 * intensity >> 8
+      //g2 = (g2 * intensity >> 8
+      //b2 = (b2 * intensity >> 8
+      //leds[i] = CRGB(intensity >> 7, intensity >> 5, intensity >> 3);
+      leds[i] = CRGB(r2, g2, b2);
+    }
+  }
+  else // 192 < state < 256
+  {
+    for (uint16_t i = 0; i < NUM_LEDS; i++)
+    {
+      leds[i] = LED_GREEN;
+    }
   }
 
+  FastLED.show();
+
   if (++t > speed) {
+    lightning_front_led++;
+    lightning_front_led %= NUM_LEDS;
     ++u;
     t = 0;
   };
